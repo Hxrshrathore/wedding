@@ -1,10 +1,10 @@
 {
-  "name": "v1",
+  "name": "Vikash Weds Shristry",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm install $NPM_FLAGS && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },

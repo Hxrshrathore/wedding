@@ -75,11 +75,7 @@ export default function LuxuryWeddingInvitation() {
 
   const toggleAudio = () => {
     if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause()
-      } else {
-        audioRef.current.play()
-      }
+      isPlaying ? audioRef.current.pause() : audioRef.current.play()
       setIsPlaying(!isPlaying)
     }
   }
