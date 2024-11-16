@@ -3,10 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ChevronRight, MapPin, Calendar, Clock, Moon, Sun, Menu, X, Volume2, VolumeX } from 'lucide-react'
-import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { Toggle } from "@/components/ui/toggle"
 
 const slideImages = [
@@ -21,8 +18,8 @@ export default function LuxuryWeddingInvitation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [cursorPosition, setCursorPosition] = useState({ x: -100, y: -100 })
   const [cursorColor, setCursorColor] = useState('white')
+  const [isPlaying, setIsPlaying] = useState(false)
   const [isHovering, setIsHovering] = useState(false)
-  const [isPlaying, setIsPlaying] = useState(true)
   const menuRef = useRef<HTMLDivElement>(null)
   const cursorRef = useRef<HTMLDivElement>(null)
   const audioRef = useRef<HTMLAudioElement>(null)
@@ -42,9 +39,7 @@ export default function LuxuryWeddingInvitation() {
     const handleMouseMove = (e: MouseEvent) => {
       setCursorPosition({ x: e.clientX, y: e.clientY })
     }
-
     document.addEventListener('mousemove', handleMouseMove)
-
     return () => {
       document.removeEventListener('mousemove', handleMouseMove)
     }
@@ -75,7 +70,7 @@ export default function LuxuryWeddingInvitation() {
     }
   }
 
-  const handleMouseEnter = () => setCursorColor(theme === 'dark' ? 'white' : 'black')
+  const handleMouseEnter = (color: string) => setCursorColor(color)
   const handleMouseLeave = () => setCursorColor('white')
 
   const toggleAudio = () => {
@@ -92,8 +87,12 @@ export default function LuxuryWeddingInvitation() {
   useEffect(() => {
     const playAudio = async () => {
       try {
-        await audioRef.current?.play()
-        setIsPlaying(true)
+        if (audioRef.current) {
+          audioRef.current.muted = true
+          await audioRef.current.play()
+          setTimeout(() => audioRef.current && (audioRef.current.muted = false), 1000)
+          setIsPlaying(true)
+        }
       } catch (error) {
         console.log("Autoplay failed:", error)
         setIsPlaying(false)
@@ -101,6 +100,18 @@ export default function LuxuryWeddingInvitation() {
     }
 
     playAudio()
+
+    const handleInteraction = () => {
+      if (audioRef.current && !isPlaying) {
+        audioRef.current.play()
+        setIsPlaying(true)
+      }
+      document.removeEventListener('click', handleInteraction)
+      document.removeEventListener('touchstart', handleInteraction)
+    }
+
+    document.addEventListener('click', handleInteraction)
+    document.addEventListener('touchstart', handleInteraction)
   }, [])
 
   const [daysUntilWedding, setDaysUntilWedding] = useState(0)
@@ -110,8 +121,7 @@ export default function LuxuryWeddingInvitation() {
     const calculateDaysLeft = () => {
       const today = new Date()
       const timeDiff = weddingDate.getTime() - today.getTime()
-      const daysLeft = Math.ceil(timeDiff / (1000 * 3600 * 24))
-      setDaysUntilWedding(daysLeft)
+      setDaysUntilWedding(Math.ceil(timeDiff / (1000 * 3600 * 24)))
     }
     calculateDaysLeft()
     const timer = setInterval(calculateDaysLeft, 1000 * 60 * 60)
@@ -130,6 +140,8 @@ export default function LuxuryWeddingInvitation() {
           transform: `translate(-50%, -50%) scale(${isHovering ? 1.5 : 1})`,
           opacity: 1,
         }}
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
       />
 
       <header className="fixed top-0 left-0 right-0 z-40 bg-white/10 dark:bg-gray-900/10 backdrop-blur-md">
@@ -140,10 +152,7 @@ export default function LuxuryWeddingInvitation() {
           <ul className="hidden md:flex space-x-6 text-sm uppercase tracking-widest">
             <li><a href="#home" onClick={() => scrollToSection('home')} className="hover:text-pink-500 transition-colors" onMouseEnter={() => handleMouseEnter('white')} onMouseLeave={handleMouseLeave}>Home</a></li>
             <li><a href="#couple" onClick={() => scrollToSection('couple')} className="hover:text-pink-500 transition-colors" onMouseEnter={() => handleMouseEnter('white')} onMouseLeave={handleMouseLeave}>Couple</a></li>
-            <li><a href="#story" onClick={() => scrollToSection('story')} className="hover:text-pink-500 transition-colors" onMouseEnter={() => handleMouseEnter('white')} onMouseLeave={handleMouseLeave}>Our Story</a></li>
             <li><a href="#events" onClick={() => scrollToSection('events')} className="hover:text-pink-500 transition-colors" onMouseEnter={() => handleMouseEnter('white')} onMouseLeave={handleMouseLeave}>Events</a></li>
-            <li><a href="#gallery" onClick={() => scrollToSection('gallery')} className="hover:text-pink-500 transition-colors" onMouseEnter={() => handleMouseEnter('white')} onMouseLeave={handleMouseLeave}>Gallery</a></li>
-            <li><a href="#rsvp" onClick={() => scrollToSection('rsvp')} className="hover:text-pink-500 transition-colors" onMouseEnter={() => handleMouseEnter('white')} onMouseLeave={handleMouseLeave}>RSVP</a></li>
           </ul>
           <Toggle pressed={theme === 'dark'} onPressedChange={toggleTheme} aria-label="Toggle theme">
             {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
@@ -167,10 +176,7 @@ export default function LuxuryWeddingInvitation() {
               </button>
               <a href="#home" onClick={() => scrollToSection('home')} className="hover:text-pink-500 transition-colors" onMouseEnter={() => handleMouseEnter('white')} onMouseLeave={handleMouseLeave}>Home</a>
               <a href="#couple" onClick={() => scrollToSection('couple')} className="hover:text-pink-500 transition-colors" onMouseEnter={() => handleMouseEnter('white')} onMouseLeave={handleMouseLeave}>Couple</a>
-              <a href="#story" onClick={() => scrollToSection('story')} className="hover:text-pink-500 transition-colors" onMouseEnter={() => handleMouseEnter('white')} onMouseLeave={handleMouseLeave}>Our Story</a>
               <a href="#events" onClick={() => scrollToSection('events')} className="hover:text-pink-500 transition-colors" onMouseEnter={() => handleMouseEnter('white')} onMouseLeave={handleMouseLeave}>Events</a>
-              <a href="#gallery" onClick={() => scrollToSection('gallery')} className="hover:text-pink-500 transition-colors" onMouseEnter={() => handleMouseEnter('white')} onMouseLeave={handleMouseLeave}>Gallery</a>
-              <a href="#rsvp" onClick={() => scrollToSection('rsvp')} className="hover:text-pink-500 transition-colors" onMouseEnter={() => handleMouseEnter('white')} onMouseLeave={handleMouseLeave}>RSVP</a>
             </div>
           </motion.div>
         )}
@@ -207,7 +213,7 @@ export default function LuxuryWeddingInvitation() {
               transition={{ duration: 0.5, delay: 1 }}
             >
               <p className="text-2xl md:text-3xl font-light">
-                <span className="font-bold text-3xl md:text-4xl">{daysUntilWedding}</span> days until we say "I do"
+                <span className="font-bold text-3xl md:text-4xl">{daysUntilWedding}</span> days until we say &quot;I do&quot;
               </p>
             </motion.div>
             <motion.p 
@@ -261,47 +267,7 @@ export default function LuxuryWeddingInvitation() {
           </div>
         </section>
 
-        <section id="story" className="py-24 px-4 bg-gradient-to-br from-blue-50 to-pink-50 dark:from-gray-900 dark:to-gray-800">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-serif mb-12">Our Love Story</h2>
-            <p className="text-base md:text-lg mb-12 text-gray-600 dark:text-gray-300">
-              Two souls intertwined by destiny, Shrishty and Vikash's love story began in the bustling streets of Mumbai. 
-              Their journey from chance encounters to soulmates is a testament to the magic of true love.
-            </p>
-            <div className="space-y-12">
-              <div className="flex items-center">
-                <div className="flex-1 text-right pr-4">
-                  <h3 className="text-xl font-semibold">First Meet</h3>
-                  <p className="text-gray-600 dark:text-gray-300">At a local art gallery</p>
-                </div>
-                <div className="w-4 h-4 bg-pink-400 rounded-full"></div>
-                <div className="flex-1 text-left pl-4">
-                  <p className="text-gray-600 dark:text-gray-300">September 2020</p>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <div className="flex-1 text-right pr-4">
-                  <p className="text-gray-600 dark:text-gray-300">December 2020</p>
-                </div>
-                <div className="w-4 h-4 bg-blue-400 rounded-full"></div>
-                <div className="flex-1 text-left pl-4">
-                  <h3 className="text-xl font-semibold">First Date</h3>
-                  <p className="text-gray-600 dark:text-gray-300">Romantic dinner by the sea</p>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <div className="flex-1 text-right pr-4">
-                  <h3 className="text-xl font-semibold">Proposal</h3>
-                  <p className="text-gray-600 dark:text-gray-300">Under the stars at Taj Mahal</p>
-                </div>
-                <div className="w-4 h-4 bg-purple-400 rounded-full"></div>
-                <div className="flex-1 text-left pl-4">
-                  <p className="text-gray-600 dark:text-gray-300">February 2023</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+        
 
         <section id="events" className="py-24 px-4 bg-gradient-to-br from-pink-100 to-blue-100 dark:from-gray-800 dark:to-gray-700">
           <div className="max-w-6xl mx-auto">
@@ -340,7 +306,7 @@ export default function LuxuryWeddingInvitation() {
                   address: '789 Royal Road, Worli, Mumbai 400018',
                   mapUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3772.6693379677587!2d72.81520731490528!3d18.99900618714738!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be7cee0dd394491%3A0x9f52e71b05151653!2sWorli%2C%20Mumbai%2C%20Maharashtra!5e0!3m2!1sen!2sin!4v1605907781058!5m2!1sen!2sin'
                 }
-              ].map((event, index) => (
+              ].map((event) => (
                 <Card key={event.name} className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-pink-50 to-blue-50 dark:from-gray-800 dark:to-gray-700" onMouseEnter={() => handleMouseEnter('black')} onMouseLeave={handleMouseLeave}>
                   <CardContent className="p-6">
                     <div className="md:flex md:space-x-6">
@@ -382,9 +348,6 @@ export default function LuxuryWeddingInvitation() {
           </div>
         </section>
 
-
-
-        
       </main>
 
       <footer className="bg-gradient-to-br from-pink-100 to-blue-100 dark:from-gray-800 dark:to-gray-700 text-gray-600 dark:text-gray-300 py-12 px-4">
@@ -392,7 +355,7 @@ export default function LuxuryWeddingInvitation() {
           <p className="text-xl md:text-2xl font-serif mb-4">Join us in celebrating our love</p>
           <p className="mb-6">Singh Family</p>
           <p className="text-sm">
-            Website created with love by {' '}
+            Website created with love by{' '}
             <a href="https://hxrshrathore.me" target="_blank" rel="noopener noreferrer" className="text-pink-500 hover:text-pink-600 transition-colors" onMouseEnter={() => handleMouseEnter('black')} onMouseLeave={handleMouseLeave}>
               Harsh :)
             </a>
